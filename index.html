@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Sentinel Archipelago Warfare Prototype</title>
+  <title>Faction Wars: Island Conquest</title>
   <style>
     :root {
       color-scheme: dark;
@@ -56,7 +56,7 @@
       gap: 8px;
       flex-wrap: wrap;
       justify-content: center;
-      width: min(960px, calc(100vw - 18px));
+      width: min(1000px, calc(100vw - 18px));
     }
 
     .chip {
@@ -81,7 +81,7 @@
     .chip .bad { color: var(--danger); }
     .chip .warn { color: var(--warn); }
 
-    #leftPanel, #rightPanel, #adminPanel {
+    #leftPanel, #rightPanel, #shopPanel {
       pointer-events: auto;
       background: var(--panel);
       border: 1.5px solid var(--line);
@@ -110,6 +110,17 @@
       animation: slideInRight 0.4s ease;
     }
 
+    #shopPanel {
+      left: 12px;
+      bottom: 12px;
+      width: 320px;
+      max-height: 45vh;
+      overflow: auto;
+      padding: 14px;
+      display: none;
+      animation: slideInLeft 0.4s ease;
+    }
+
     @keyframes slideInLeft {
       0% { transform: translateX(-20px); opacity: 0; }
       100% { transform: translateX(0); opacity: 1; }
@@ -118,15 +129,6 @@
     @keyframes slideInRight {
       0% { transform: translateX(20px); opacity: 0; }
       100% { transform: translateX(0); opacity: 1; }
-    }
-
-    #adminPanel {
-      right: 12px;
-      bottom: 118px;
-      width: 310px;
-      display: none;
-      padding: 14px;
-      animation: slideInRight 0.4s ease;
     }
 
     h1, h2, h3, p { margin: 0; }
@@ -156,6 +158,7 @@
       cursor: pointer;
       transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      width: 100%;
     }
 
     .btn:hover, button:hover {
@@ -174,17 +177,6 @@
     .btn.danger { 
       border-color: rgba(255, 107, 95, 0.5); 
       background: linear-gradient(135deg, rgba(91, 43, 43, 0.95), rgba(42, 20, 24, 0.95));
-    }
-    .btn.danger:hover {
-      border-color: rgba(255, 107, 95, 0.8);
-      box-shadow: 0 6px 16px rgba(255, 107, 95, 0.25);
-    }
-    .btn.warn { 
-      border-color: rgba(255, 204, 102, 0.5);
-      background: linear-gradient(135deg, rgba(100, 80, 30, 0.9), rgba(50, 40, 20, 0.9));
-    }
-    .btn.warn:hover {
-      box-shadow: 0 6px 16px rgba(255, 204, 102, 0.25);
     }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .grid.one { grid-template-columns: 1fr; }
@@ -222,6 +214,25 @@
     @keyframes barGlow {
       0%, 100% { box-shadow: 0 0 8px rgba(72, 211, 163, 0.5); }
       50% { box-shadow: 0 0 16px rgba(72, 211, 163, 0.8); }
+    }
+
+    .shop-item {
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(72, 211, 163, 0.2);
+      border-radius: 8px;
+      margin: 6px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .shop-item button {
+      width: auto;
+      padding: 6px 10px;
+      font-size: 11px;
+      margin: 0;
     }
 
     #crosshair {
@@ -275,7 +286,6 @@
       background: linear-gradient(135deg, rgba(72, 211, 163, 0.85), rgba(72, 211, 163, 0.5));
       border: 2px solid rgba(230, 255, 249, 0.7);
       box-shadow: 0 0 20px rgba(72, 211, 163, 0.4);
-      transition: all 0.08s ease;
     }
 
     #lookPad {
@@ -284,17 +294,6 @@
       width: 48vw;
       height: 62vh;
       display: none;
-    }
-
-    #mobileButtons {
-      position: fixed;
-      right: 14px;
-      bottom: 22px;
-      display: none;
-      grid-template-columns: repeat(2, 84px);
-      gap: 8px;
-      z-index: 13;
-      pointer-events: auto;
     }
 
     #message {
@@ -350,8 +349,8 @@
     #loading p { margin-bottom: 18px; color: #aab8b5; }
 
     @media (pointer: coarse), (max-width: 820px) {
-      #moveStick, #lookPad, #mobileButtons { display: grid; }
-      #leftPanel, #rightPanel { display: none; }
+      #lookPad { display: grid; }
+      #leftPanel, #rightPanel, #shopPanel { display: none; }
       #topBar { top: 6px; gap: 5px; }
       .chip { padding: 6px 8px; font-size: 10px; }
       #message { bottom: 180px; font-size: 12px; }
@@ -359,82 +358,61 @@
   </style>
 </head>
 <body>
-  <canvas id="game" aria-label="Sentinel Archipelago Three.js canvas"></canvas>
+  <canvas id="game" aria-label="Faction Wars Three.js canvas"></canvas>
   <div id="crosshair"></div>
 
   <div id="loading">
     <div class="card">
-      <h1>Sentinel Archipelago</h1>
-      <p>Loading enhanced warfare sandbox with advanced models and animations...</p>
+      <h1>Faction Wars</h1>
+      <p>Island Conquest - Build your economy, launch missiles, defend your base...</p>
       <div class="bar"><span id="loadBar" style="width: 12%"></span></div>
     </div>
   </div>
 
   <div id="topBar" class="hud">
-    <div class="chip">CALLSIGN <strong>Sentinel</strong></div>
-    <div class="chip">FUNDS <strong id="money">$0</strong></div>
+    <div class="chip">FACTION <strong>Blue Command</strong></div>
+    <div class="chip">CREDITS <strong id="money">$0</strong></div>
     <div class="chip">INCOME <strong id="income" class="good">$0/s</strong></div>
-    <div class="chip">STOCK <strong id="stockClock" class="warn">10:00</strong></div>
-    <div class="chip">ALERT <strong id="alertState">CLEAR</strong></div>
+    <div class="chip">DEFENSE <strong id="defense">100%</strong></div>
+    <div class="chip">THREAT <strong id="alertState">CALM</strong></div>
     <div class="chip">FPS <strong id="fps">60</strong></div>
   </div>
 
   <section id="leftPanel" class="hud">
-    <h2>Command Console</h2>
-    <p>Enhanced prototype: improved models, smooth animations, advanced particle effects, and dynamic lighting.</p>
-    <h3>Build Systems</h3>
-    <div id="buildButtons" class="grid one"></div>
+    <h2>Battle Status</h2>
+    <h3>Factions Online</h3>
+    <div id="factionStatus"></div>
+    <h3>Base Health</h3>
+    <div id="baseHealth" class="bar"><span id="baseHealthBar" style="width: 100%; background: var(--accent);"></span></div>
     <h3>Controls</h3>
     <ul>
-      <li>WASD / joystick: move commander.</li>
-      <li>Mouse drag / right touch: camera.</li>
-      <li>B: command. M: missile. I: interceptor.</li>
-      <li>Click terrain with active button to place.</li>
+      <li>WASD: Move commander</li>
+      <li>Mouse: Camera control</li>
+      <li>L: Launch Attack Missile</li>
+      <li>D: Defend (Auto-intercept)</li>
+      <li>S: Open Shop</li>
     </ul>
   </section>
 
   <section id="rightPanel" class="hud">
-    <h2>Strategic Systems</h2>
-    <div class="grid">
-      <button id="launchMissile">Launch Missile</button>
-      <button id="launchInterceptor">Launch Interceptor</button>
-      <button id="toggleAlliance">Alliance Menu</button>
-      <button id="toggleEconomy">Economy Menu</button>
-      <button id="toggleAircraft">Aircraft Status</button>
-      <button id="toggleAdmin" class="warn">Admin Panel</button>
-    </div>
-    <h3>Global Shared Stock</h3>
-    <div id="stockList"></div>
-    <h3>Alliance</h3>
-    <p id="allianceText">Guardian Pact: shared radar and interceptor protection enabled for allied bases.</p>
+    <h2>Arsenal</h2>
+    <h3>Missile Status</h3>
+    <div id="missileStatus"></div>
+    <h3>Defense Systems</h3>
+    <button id="defendToggle">Activate Defense Grid</button>
+    <button id="launchMissile">Fire Missiles Now</button>
     <h3>Battle Log</h3>
     <div id="battleLog" class="log"></div>
   </section>
 
-  <section id="adminPanel" class="hud">
-    <h2>Optional Admin Panel</h2>
-    <div class="grid one">
-      <button id="adminHarpoon">Spawn Mega Harpoon</button>
-      <button id="adminRockets">Spawn Mega Rockets</button>
-      <button id="adminPull">Pull Islands Together</button>
-      <button id="adminDestroy" class="danger">Destroy Target Island</button>
-      <button id="adminBots">Spawn Bot Squadron</button>
-      <button id="adminEvent" class="warn">Trigger Tempest Event</button>
-    </div>
+  <section id="shopPanel" class="hud">
+    <h2>Build Shop</h2>
+    <p>Purchase economic buildings to increase income</p>
+    <div id="shopItems"></div>
   </section>
 
   <div id="message" class="hud"></div>
-
-  <div id="moveStick" class="touch-zone"><div class="knob"></div></div>
   <div id="lookPad" class="touch-zone"></div>
-  <div id="mobileButtons">
-    <button data-action="build">Build</button>
-    <button data-action="missile">Missiles</button>
-    <button data-action="interceptor">Intercept</button>
-    <button data-action="aircraft">Aircraft</button>
-    <button data-action="alliance">Alliance</button>
-    <button data-action="economy">Economy</button>
-  </div>
 
   <script type="importmap">
     {
@@ -453,18 +431,19 @@
       loadBar: document.getElementById('loadBar'),
       money: document.getElementById('money'),
       income: document.getElementById('income'),
-      stockClock: document.getElementById('stockClock'),
+      defense: document.getElementById('defense'),
       alertState: document.getElementById('alertState'),
       fps: document.getElementById('fps'),
-      buildButtons: document.getElementById('buildButtons'),
-      stockList: document.getElementById('stockList'),
+      baseHealth: document.getElementById('baseHealthBar'),
       battleLog: document.getElementById('battleLog'),
       message: document.getElementById('message'),
-      adminPanel: document.getElementById('adminPanel'),
-      moveStick: document.getElementById('moveStick'),
-      moveKnob: document.querySelector('#moveStick .knob'),
+      shopPanel: document.getElementById('shopPanel'),
+      shopItems: document.getElementById('shopItems'),
+      factionStatus: document.getElementById('factionStatus'),
+      missileStatus: document.getElementById('missileStatus'),
       lookPad: document.getElementById('lookPad'),
-      mobileButtons: document.getElementById('mobileButtons')
+      defendToggle: document.getElementById('defendToggle'),
+      launchMissile: document.getElementById('launchMissile')
     };
 
     const WORLD = {
@@ -473,38 +452,30 @@
       waterLevel: 0,
       gravity: 36,
       playerRadius: 2.2,
-      restockInterval: 600,
       maxActiveParticles: 120,
-      botThinkInterval: 1.2,
-      missilePoolSize: 80,
-      explosionPoolSize: 50
+      missilePoolSize: 120,
+      explosionPoolSize: 60
     };
 
     const TEAMS = {
-      player: { id: 'player', name: 'Sentinel Command', color: 0x48d3a3, allyGroup: 'guardian' },
-      hydra: { id: 'hydra', name: 'Hydra Directorate', color: 0xff695d, allyGroup: 'hydra' },
-      wraith: { id: 'wraith', name: 'Wraith Division', color: 0x8d7dff, allyGroup: 'wraith' },
-      falcon: { id: 'falcon', name: 'Falcon Compact', color: 0xffc857, allyGroup: 'guardian' }
+      player: { id: 'player', name: 'Blue Command', color: 0x48d3a3, allyGroup: 'blue' },
+      red: { id: 'red', name: 'Red Legion', color: 0xff5555, allyGroup: 'red' },
+      yellow: { id: 'yellow', name: 'Yellow Force', color: 0xffdd55, allyGroup: 'yellow' }
     };
 
     const BUILDING_TYPES = Object.freeze({
-      command: { name: 'Command Center', key: 'command', cost: 0, hp: 1200, income: 22, radius: 20, color: 0x6ed3bf, height: 22, category: 'core' },
-      factory: { name: 'Factory', key: 'factory', cost: 280, hp: 520, income: 8, radius: 15, color: 0x8ea1a8, height: 14, category: 'industry' },
-      silo: { name: 'Missile Silo', key: 'silo', cost: 420, hp: 420, income: 0, radius: 14, color: 0x4d5964, height: 18, category: 'missile' },
-      interceptor: { name: 'Interceptor Launcher', key: 'interceptor', cost: 360, hp: 460, income: 0, radius: 13, color: 0x5ca3ff, height: 15, category: 'defense' },
-      radar: { name: 'Radar Tower', key: 'radar', cost: 260, hp: 300, income: 0, radius: 10, color: 0x9be7ff, height: 32, category: 'radar' },
-      refinery: { name: 'Refinery', key: 'refinery', cost: 340, hp: 450, income: 26, radius: 16, color: 0xb8a066, height: 16, category: 'economy' },
-      runway: { name: 'Aircraft Runway', key: 'runway', cost: 620, hp: 580, income: 0, radius: 26, color: 0x3f484d, height: 4, category: 'aircraft' },
-      defense: { name: 'Guardian Defense System', key: 'defense', cost: 460, hp: 540, income: 0, radius: 15, color: 0x72f0ae, height: 18, category: 'defense' }
+      hq: { name: 'Headquarters', key: 'hq', cost: 0, hp: 1500, income: 0, radius: 25, color: 0x5a9fb5, height: 30, category: 'defense' },
+      farm: { name: 'Credit Farm', key: 'farm', cost: 150, hp: 200, income: 8, radius: 12, color: 0x8ea1a8, height: 10, category: 'economy' },
+      plant: { name: 'Industrial Plant', key: 'plant', cost: 300, hp: 350, income: 18, radius: 14, color: 0xa89050, height: 14, category: 'economy' },
+      silo: { name: 'Missile Silo', key: 'silo', cost: 450, hp: 500, income: 0, radius: 14, color: 0x4d5964, height: 20, category: 'missile' },
+      defense: { name: 'Auto Defense Turret', key: 'defense', cost: 250, hp: 300, income: 0, radius: 10, color: 0x72f0ae, height: 16, category: 'defense', range: 150 }
     });
 
-    const MISSILE_CLASSES = Object.freeze({
-      common: { name: 'Common Tempest', stock: 28, maxStock: 36, damage: 160, speed: 95, blast: 35, color: 0xffdd88, restockChance: 0.96, restockMin: 10, restockMax: 18, cost: 80 },
-      heavy: { name: 'Heavy Titan', stock: 10, maxStock: 16, damage: 320, speed: 72, blast: 48, color: 0xff995d, restockChance: 0.68, restockMin: 4, restockMax: 8, cost: 180 },
-      cruise: { name: 'Cruise Falcon', stock: 7, maxStock: 10, damage: 240, speed: 130, blast: 38, color: 0x9fd3ff, restockChance: 0.45, restockMin: 2, restockMax: 5, cost: 220 },
-      nuclear: { name: 'Nuclear Wraith', stock: 1, maxStock: 2, damage: 900, speed: 58, blast: 95, color: 0xb4ff77, restockChance: 0.12, restockMin: 1, restockMax: 1, cost: 900 },
-      experimental: { name: 'Experimental Hydra', stock: 1, maxStock: 3, damage: 620, speed: 150, blast: 62, color: 0xca84ff, restockChance: 0.18, restockMin: 1, restockMax: 1, cost: 720 }
-    });
+    const MISSILE_TYPES = {
+      attack: { name: 'Strike Missile', damage: 300, speed: 120, blast: 50, color: 0xff6b5f, cost: 200 },
+      fast: { name: 'Quick Strike', damage: 150, speed: 180, blast: 30, color: 0xffdd88, cost: 100 },
+      heavy: { name: 'Heavy Warhead', damage: 500, speed: 80, blast: 80, color: 0xff9955, cost: 400 }
+    };
 
     const state = {
       scene: null,
@@ -517,23 +488,19 @@
       buildings: [],
       bots: [],
       missiles: [],
-      interceptors: [],
       explosions: [],
       particles: [],
-      money: 900,
+      money: 2000,
       income: 0,
-      nextRestock: WORLD.restockInterval,
-      stock: structuredClone(MISSILE_CLASSES),
-      selectedBuild: null,
-      hoveredPoint: null,
-      alert: 'CLEAR',
+      baseHealth: 1500,
+      maxBaseHealth: 1500,
+      defendActive: false,
       cameraYaw: 0,
       cameraPitch: -0.42,
       fpsTimer: 0,
       fpsFrames: 0,
-      waterTimer: 0,
-      adminOpen: false,
-      aircraftReady: false
+      shopOpen: false,
+      botThinkCounter: 0
     };
 
     const input = {
@@ -543,25 +510,22 @@
       pointerDown: false,
       lastX: 0,
       lastY: 0,
-      touchMoveId: null,
       touchLookId: null,
-      joystick: new THREE.Vector2(),
       lookDelta: new THREE.Vector2()
     };
 
     const materials = {};
     const tempVec = new THREE.Vector3();
     const tempVec2 = new THREE.Vector3();
-    const tempQuat = new THREE.Quaternion();
 
     const player = {
       team: TEAMS.player,
       mesh: null,
       velocity: new THREE.Vector3(),
       grounded: false,
-      health: 100,
       spawn: new THREE.Vector3(),
-      island: null
+      island: null,
+      base: null
     };
 
     class ObjectPool {
@@ -587,67 +551,23 @@
       }
     }
 
-    let missilePool;
-    let explosionPool;
+    let missilePool, explosionPool;
 
     function createMaterials() {
       materials.ocean = new THREE.MeshStandardMaterial({ 
-        color: 0x0a5b78, 
-        roughness: 0.45, 
-        metalness: 0.15, 
-        transparent: true, 
-        opacity: 0.85,
-        emissive: 0x0a2535,
-        emissiveIntensity: 0.15
+        color: 0x0a5b78, roughness: 0.45, metalness: 0.15, transparent: true, opacity: 0.85,
+        emissive: 0x0a2535, emissiveIntensity: 0.15
       });
-      materials.sand = new THREE.MeshStandardMaterial({ 
-        color: 0xb8a876, 
-        roughness: 0.88,
-        metalness: 0.02
-      });
-      materials.grass = new THREE.MeshStandardMaterial({ 
-        color: 0x5a8a52, 
-        roughness: 0.92,
-        metalness: 0.01
-      });
-      materials.rock = new THREE.MeshStandardMaterial({ 
-        color: 0x6a7278, 
-        roughness: 0.95,
-        metalness: 0.05
-      });
-      materials.player = new THREE.MeshStandardMaterial({ 
-        color: TEAMS.player.color, 
-        roughness: 0.62,
-        metalness: 0.12,
-        emissive: 0x1a6b5a,
-        emissiveIntensity: 0.25
-      });
-      materials.dark = new THREE.MeshStandardMaterial({ 
-        color: 0x1e2a31, 
-        roughness: 0.68,
-        metalness: 0.18
-      });
-      materials.window = new THREE.MeshStandardMaterial({ 
-        color: 0xa8f0ff, 
-        emissive: 0x2a6d8f, 
-        roughness: 0.25,
-        metalness: 0.35,
-        emissiveIntensity: 0.35
-      });
-      materials.warning = new THREE.MeshStandardMaterial({ 
-        color: 0xffdd88, 
-        emissive: 0x664400, 
-        roughness: 0.35,
-        metalness: 0.25,
-        emissiveIntensity: 0.4
-      });
+      materials.grass = new THREE.MeshStandardMaterial({ color: 0x5a8a52, roughness: 0.92 });
+      materials.rock = new THREE.MeshStandardMaterial({ color: 0x6a7278, roughness: 0.95 });
+      materials.dark = new THREE.MeshStandardMaterial({ color: 0x1e2a31, roughness: 0.68 });
+      materials.window = new THREE.MeshStandardMaterial({ color: 0xa8f0ff, emissive: 0x2a6d8f, roughness: 0.25, emissiveIntensity: 0.35 });
+      materials.warning = new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: 0x664400, roughness: 0.35, emissiveIntensity: 0.4 });
     }
 
     function cloneTeamMaterial(color) {
       return new THREE.MeshStandardMaterial({ 
-        color, 
-        roughness: 0.6, 
-        metalness: 0.15,
+        color, roughness: 0.6, metalness: 0.15,
         emissive: new THREE.Color(color).multiplyScalar(0.4),
         emissiveIntensity: 0.2
       });
@@ -666,7 +586,6 @@
       state.renderer.setSize(innerWidth, innerHeight);
       state.renderer.shadowMap.enabled = true;
       state.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      state.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
       setupLights();
       createOcean();
@@ -677,8 +596,8 @@
       setupUI();
       setupInput();
       updateLoad(88);
-      log('Sentinel Command online. Enhanced models and animations active.');
-      showMessage('Prototype online: place buildings, launch missiles, and watch AI factions fight.', 3800);
+      log('Faction Wars: Island Conquest initialized. Factions locked and loaded.');
+      showMessage('Deploy your commander. Manage your economy. Defend your base. Conquer the islands!', 4000);
       setTimeout(() => { ui.loading.style.display = 'none'; }, 250);
       animate();
     }
@@ -699,12 +618,7 @@
       sun.shadow.camera.top = 900;
       sun.shadow.camera.bottom = -900;
       sun.shadow.bias = -0.0005;
-      sun.shadow.normalBias = 0.02;
       state.scene.add(sun);
-
-      const fill = new THREE.DirectionalLight(0x5a9fff, 0.6);
-      fill.position.set(300, 400, -200);
-      state.scene.add(fill);
     }
 
     function createOcean() {
@@ -739,25 +653,22 @@
         const y = islandHeightAt(island, x, z);
         if (y > best.y) best = { y, island, normal: new THREE.Vector3(0, 1, 0), buildable: y > 1.8 };
       }
-      return best.y === -Infinity ? { y: WORLD.waterLevel - 0.4, island: null, normal: new THREE.Vector3(0, 1, 0), buildable: false } : best;
+      return best.y === -Infinity ? { y: WORLD.waterLevel - 0.4, island: null, buildable: false } : best;
     }
 
     function createIslands() {
       const layout = [
-        [0, 0, 280, 225, 62], [-600, -380, 240, 180, 48], [580, -300, 230, 190, 50],
-        [-820, 420, 270, 200, 54], [720, 460, 260, 210, 52], [100, 820, 200, 165, 40], [-80, -860, 210, 170, 44]
+        [0, 0, 300, 250, 65], [-700, -450, 280, 220, 55], [750, -350, 260, 240, 58],
+        [-950, 500, 300, 230, 62], [800, 550, 280, 250, 60], [150, 950, 220, 190, 48], [-100, -1000, 240, 200, 52]
       ];
 
       layout.forEach((cfg, index) => {
         const island = { 
           id: 'island-' + index, 
           position: new THREE.Vector3(cfg[0], 0, cfg[1]), 
-          radiusX: cfg[2], 
-          radiusZ: cfg[3], 
-          height: cfg[4], 
+          radiusX: cfg[2], radiusZ: cfg[3], height: cfg[4], 
           seed: 1000 + index * 137, 
-          mesh: null, 
-          buildings: [] 
+          mesh: null, buildings: [], team: null
         };
         const geometry = new THREE.PlaneGeometry(island.radiusX * 2.15, island.radiusZ * 2.15, 40, 40);
         geometry.rotateX(-Math.PI / 2);
@@ -775,7 +686,7 @@
         }
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
         geometry.computeVertexNormals();
-        const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0.02 });
+        const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 });
         const mesh = new THREE.Mesh(geometry, mat);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -783,7 +694,6 @@
         island.mesh = mesh;
         state.scene.add(mesh);
         state.islands.push(island);
-
         createIslandRocks(island);
       });
     }
@@ -809,7 +719,7 @@
     }
 
     function createPlayer() {
-      player.mesh = createHumanoid(TEAMS.player.color, 'Sentinel Commander');
+      player.mesh = createHumanoid(TEAMS.player.color, 'Commander');
       const home = state.islands[0];
       const y = islandHeightAt(home, 38, 36);
       player.spawn.set(38, y + 4, 36);
@@ -859,12 +769,11 @@
       rightLeg.position.x = 0.8;
       
       group.add(body, head, visor, pack, leftArm, rightArm, leftLeg, rightLeg);
-      group.castShadow = true;
       return group;
     }
 
     function setupPools() {
-      missilePool = new ObjectPool(createMissileObject, resetProjectile, WORLD.missilePoolSize);
+      missilePool = new ObjectPool(createMissileObject, resetMissile, WORLD.missilePoolSize);
       explosionPool = new ObjectPool(createExplosionObject, resetExplosion, WORLD.explosionPoolSize);
     }
 
@@ -884,21 +793,31 @@
         const fin = new THREE.Mesh(finGeo, materials.dark);
         fin.position.z = 3.8;
         fin.rotation.z = i * Math.PI / 2;
-        fin.castShadow = true;
         group.add(fin);
       }
       group.add(body, nose);
       group.visible = false;
       group.castShadow = true;
       state.scene.add(group);
-      return { mesh: group, velocity: new THREE.Vector3(), target: null, team: null, classKey: 'common', life: 0, active: false, isInterceptor: false };
+      return { 
+        mesh: group, 
+        velocity: new THREE.Vector3(), 
+        target: null, 
+        team: null, 
+        type: 'attack',
+        life: 0, 
+        active: false, 
+        damage: 300,
+        blast: 50,
+        isDefense: false
+      };
     }
 
-    function resetProjectile(obj) {
+    function resetMissile(obj) {
       obj.mesh.visible = false;
       obj.target = null;
       obj.life = 0;
-      obj.isInterceptor = false;
+      obj.isDefense = false;
       obj.velocity.set(0, 0, 0);
     }
 
@@ -908,153 +827,118 @@
         new THREE.MeshBasicMaterial({ color: 0xffaa66, transparent: true, opacity: 0.75 })
       );
       mesh.visible = false;
-      mesh.scale.set(0.8, 0.8, 0.8);
       state.scene.add(mesh);
-      
-      const glowMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(1.2, 12, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffdd88, transparent: true, opacity: 0.4 })
-      );
-      glowMesh.scale.set(0.8, 0.8, 0.8);
-      glowMesh.visible = false;
-      state.scene.add(glowMesh);
-      
-      return { mesh, glowMesh, active: false, life: 0, maxLife: 1, radius: 1 };
+      return { mesh, active: false, life: 0, maxLife: 0.8, radius: 1 };
     }
 
     function resetExplosion(obj) {
       obj.mesh.visible = false;
-      if (obj.glowMesh) obj.glowMesh.visible = false;
       obj.life = 0;
       obj.radius = 1;
     }
 
     function seedBases() {
-      placeBuilding('command', new THREE.Vector3(0, 0, 0), TEAMS.player, state.islands[0]);
-      placeBuilding('radar', new THREE.Vector3(35, 0, -38), TEAMS.player, state.islands[0]);
-      placeBuilding('interceptor', new THREE.Vector3(-42, 0, 32), TEAMS.player, state.islands[0]);
-      placeBuilding('refinery', new THREE.Vector3(75, 0, 48), TEAMS.player, state.islands[0]);
-      spawnBot('Hydra', TEAMS.hydra, state.islands[1]);
-      spawnBot('Wraith', TEAMS.wraith, state.islands[2]);
-      spawnBot('Falcon', TEAMS.falcon, state.islands[4]);
-      recalcIncome();
-    }
+      player.base = placeBuilding('hq', new THREE.Vector3(0, 0, 0), TEAMS.player, state.islands[0]);
+      placeBuilding('farm', new THREE.Vector3(35, 0, -40), TEAMS.player, state.islands[0]);
+      placeBuilding('silo', new THREE.Vector3(-50, 0, 35), TEAMS.player, state.islands[0]);
+      placeBuilding('defense', new THREE.Vector3(70, 0, 45), TEAMS.player, state.islands[0]);
 
-    function spawnBot(name, team, island) {
-      const bot = {
-        name: name + ' Commander',
-        team,
-        island,
-        money: 760,
-        thinkTimer: Math.random() * WORLD.botThinkInterval,
-        launchCooldown: 4 + Math.random() * 6,
-        buildings: [],
-        aggression: 0.45 + Math.random() * 0.35
-      };
-      const center = island.position;
-      const offsets = [[0, 0], [45, 28], [-42, -30], [68, -45], [-64, 38]];
-      ['command', 'refinery', 'silo', 'interceptor', 'radar'].forEach((type, i) => {
-        const p = new THREE.Vector3(center.x + offsets[i][0], 0, center.z + offsets[i][1]);
-        const building = placeBuilding(type, p, team, island);
-        if (building) bot.buildings.push(building);
+      const botTeams = [TEAMS.red, TEAMS.yellow];
+      botTeams.forEach((team, i) => {
+        const island = state.islands[i + 1];
+        island.team = team;
+        const base = placeBuilding('hq', island.position.clone(), team, island);
+        placeBuilding('farm', island.position.clone().add(new THREE.Vector3(40, 0, -30)), team, island);
+        placeBuilding('plant', island.position.clone().add(new THREE.Vector3(-45, 0, 35)), team, island);
+        placeBuilding('silo', island.position.clone().add(new THREE.Vector3(60, 0, 50)), team, island);
+        placeBuilding('defense', island.position.clone().add(new THREE.Vector3(-60, 0, -45)), team, island);
+        
+        state.bots.push({
+          team, base, island, thinkTimer: Math.random() * 3, attackCooldown: 5 + Math.random() * 5, lastTargetIdx: 0
+        });
       });
-      state.bots.push(bot);
-      log(team.name + ' established a fortified foothold on ' + island.id + '.');
+
+      recalcIncome();
     }
 
     function createBuildingMesh(def, team) {
       const group = new THREE.Group();
       const baseMat = cloneTeamMaterial(def.color);
       const teamMat = cloneTeamMaterial(team.color);
+      
       const base = new THREE.Mesh(new THREE.CylinderGeometry(def.radius, def.radius * 1.12, 3.8, 12), materials.dark);
       base.position.y = 1.9;
       base.castShadow = true;
-      base.receiveShadow = true;
       group.add(base);
 
-      if (def.key === 'runway') {
-        const strip = new THREE.Mesh(new THREE.BoxGeometry(def.radius * 2.8, 2.4, def.radius * 0.8), baseMat);
-        strip.position.y = 3;
-        strip.castShadow = true;
-        group.add(strip);
-        const line = new THREE.Mesh(new THREE.BoxGeometry(def.radius * 2.3, 2.5, 0.55), materials.warning);
-        line.position.y = 4.2;
-        group.add(line);
-      } else if (def.key === 'radar') {
-        const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2, def.height, 10), baseMat);
-        tower.position.y = def.height * 0.5 + 3.2;
+      if (def.key === 'hq') {
+        const tower = new THREE.Mesh(new THREE.CylinderGeometry(12, 15, 30, 12), teamMat);
+        tower.position.y = 18;
         tower.castShadow = true;
-        const dish = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.42, 10, 20), teamMat);
-        dish.position.y = def.height + 5.5;
-        dish.rotation.x = Math.PI / 2.6;
-        dish.castShadow = true;
-        group.add(tower, dish);
-      } else if (def.key === 'silo' || def.key === 'interceptor') {
-        const tube = new THREE.Mesh(new THREE.CylinderGeometry(def.radius * 0.4, def.radius * 0.5, def.height, 14), baseMat);
-        tube.position.y = def.height * 0.5 + 3.2;
+        const top = new THREE.Mesh(new THREE.ConeGeometry(10, 12, 12), baseMat);
+        top.position.y = 36;
+        top.castShadow = true;
+        group.add(tower, top);
+      } else if (def.key === 'farm' || def.key === 'plant') {
+        const core = new THREE.Mesh(new THREE.BoxGeometry(def.radius * 1.2, def.height, def.radius * 1.1), teamMat);
+        core.position.y = def.height * 0.5 + 2;
+        core.castShadow = true;
+        group.add(core);
+      } else if (def.key === 'silo') {
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(def.radius * 0.4, def.radius * 0.5, def.height, 14), teamMat);
+        tube.position.y = def.height * 0.5 + 2;
         tube.castShadow = true;
-        const hatch = new THREE.Mesh(new THREE.CylinderGeometry(def.radius * 0.6, def.radius * 0.6, 1.4, 14), teamMat);
-        hatch.position.y = def.height + 4;
-        hatch.castShadow = true;
-        group.add(tube, hatch);
+        group.add(tube);
       } else if (def.key === 'defense') {
-        const turret = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 6.5, 6.8, 10), baseMat);
-        turret.position.y = 6.8;
+        const turret = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 8, 10), teamMat);
+        turret.position.y = 7;
         turret.castShadow = true;
-        const barrel = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.4, 13), teamMat);
-        barrel.position.set(0, 8.5, -7.5);
+        const barrel = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.5, 14), baseMat);
+        barrel.position.set(0, 9, -8);
         barrel.castShadow = true;
         group.add(turret, barrel);
-      } else {
-        const core = new THREE.Mesh(new THREE.BoxGeometry(def.radius * 1.2, def.height, def.radius * 1.1), baseMat);
-        core.position.y = def.height * 0.5 + 3.2;
-        core.castShadow = true;
-        const cap = new THREE.Mesh(new THREE.ConeGeometry(def.radius * 0.9, 6, 6), teamMat);
-        cap.position.y = def.height + 6.2;
-        cap.rotation.y = Math.PI / 4;
-        cap.castShadow = true;
-        group.add(core, cap);
       }
 
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(def.radius * 1.1, 0.25, 8, 32), teamMat);
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = 3.8;
-      ring.castShadow = true;
-      group.add(ring);
       return group;
     }
 
     function placeBuilding(typeKey, requestedPosition, team, forcedIsland = null) {
       const def = BUILDING_TYPES[typeKey];
-      if (!def) {
-        log('Registry error blocked: unknown building type "' + typeKey + '".', 'bad');
-        return null;
-      }
+      if (!def) return null;
+
       const terrain = forcedIsland 
         ? { y: islandHeightAt(forcedIsland, requestedPosition.x, requestedPosition.z), island: forcedIsland, buildable: true } 
         : getTerrainInfo(requestedPosition.x, requestedPosition.z);
-      if (!terrain.island || !terrain.buildable || terrain.y < WORLD.waterLevel + 1) {
-        showMessage('Placement denied: structures require stable island terrain.');
-        return null;
-      }
+
+      if (!terrain.island || !terrain.buildable || terrain.y < WORLD.waterLevel + 1) return null;
+
       for (const other of state.buildings) {
         const minDistance = def.radius + other.def.radius + 5;
         if (other.mesh.position.distanceTo(new THREE.Vector3(requestedPosition.x, other.mesh.position.y, requestedPosition.z)) < minDistance) {
-          if (team.id === 'player') showMessage('Placement denied: building footprint overlaps existing structure.');
           return null;
         }
       }
+
       if (team.id === 'player' && state.money < def.cost) {
-        showMessage('Insufficient funds for ' + def.name + '.');
+        showMessage('Not enough credits for ' + def.name);
         return null;
       }
+
       if (team.id === 'player') state.money -= def.cost;
+
       const mesh = createBuildingMesh(def, team);
       mesh.position.set(requestedPosition.x, terrain.y + 0.1, requestedPosition.z);
-      mesh.rotation.y = Math.atan2(requestedPosition.x - terrain.island.position.x, requestedPosition.z - terrain.island.position.z) * 0.25;
       mesh.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
       state.scene.add(mesh);
-      const building = { id: createId(), type: typeKey, def, team, hp: def.hp, maxHp: def.hp, mesh, island: terrain.island, cooldown: 0 };
+
+      const building = { 
+        id: Math.random().toString(36).substr(2, 9), 
+        type: typeKey, def, team, 
+        hp: def.hp, maxHp: def.hp, 
+        mesh, island: terrain.island, 
+        cooldown: 0,
+        lastAttackTime: 0
+      };
       mesh.userData.building = building;
       state.buildings.push(building);
       terrain.island.buildings.push(building);
@@ -1063,69 +947,120 @@
     }
 
     function recalcIncome() {
-      state.income = state.buildings.filter(b => b.team.id === 'player').reduce((sum, b) => sum + b.def.income, 0);
+      state.income = state.buildings.filter(b => b.team.id === 'player' && (b.type === 'farm' || b.type === 'plant')).reduce((sum, b) => sum + b.def.income, 0);
     }
 
     function setupUI() {
+      const shopItemsDiv = ui.shopItems;
       Object.values(BUILDING_TYPES).forEach(def => {
-        const button = document.createElement('button');
-        button.textContent = def.name + ' $' + def.cost;
-        button.title = def.category;
-        button.addEventListener('click', () => setBuildMode(def.key, button));
-        ui.buildButtons.appendChild(button);
+        if (def.category === 'economy') {
+          const item = document.createElement('div');
+          item.className = 'shop-item';
+          item.innerHTML = `
+            <div>
+              <strong>${def.name}</strong><br>
+              <span style="font-size: 10px; color: var(--muted);">+$${def.income}/s</span>
+            </div>
+            <button onclick="buyBuilding('${def.key}')" style="width: auto; padding: 6px 10px;">$${def.cost}</button>
+          `;
+          shopItemsDiv.appendChild(item);
+        }
       });
-      document.getElementById('launchMissile').addEventListener('click', () => launchPlayerMissile());
-      document.getElementById('launchInterceptor').addEventListener('click', () => launchManualInterceptor());
-      document.getElementById('toggleAdmin').addEventListener('click', () => toggleAdmin());
-      document.getElementById('toggleAlliance').addEventListener('click', () => showMessage('Guardian Pact: defender, aircraft support, economy manager, missile commander.'));
-      document.getElementById('toggleEconomy').addEventListener('click', () => showMessage('Global stock is shared: buying weapons lowers availability for everyone.'));
-      document.getElementById('toggleAircraft').addEventListener('click', () => showMessage('Aircraft phase coming next. Build a runway to prepare for sorties.'));
-      document.getElementById('adminHarpoon').addEventListener('click', () => adminHarpoon());
-      document.getElementById('adminRockets').addEventListener('click', () => adminRockets());
-      document.getElementById('adminPull').addEventListener('click', () => adminPullIslands());
-      document.getElementById('adminDestroy').addEventListener('click', () => adminDestroyIsland());
-      document.getElementById('adminBots').addEventListener('click', () => spawnBot('Titan', TEAMS.hydra, state.islands[5]));
-      document.getElementById('adminEvent').addEventListener('click', () => tempestEvent());
-      ui.mobileButtons.addEventListener('click', event => handleMobileAction(event.target.dataset.action));
-      refreshStockUI();
+
+      ui.defendToggle.addEventListener('click', () => toggleDefense());
+      ui.launchMissile.addEventListener('click', () => launchAttackMissile());
+      document.addEventListener('keydown', e => {
+        if (e.key.toLowerCase() === 's') toggleShop();
+        if (e.key.toLowerCase() === 'd') toggleDefense();
+        if (e.key.toLowerCase() === 'l') launchAttackMissile();
+      });
+
+      refreshUI();
     }
 
-    function setBuildMode(typeKey, button = null) {
-      state.selectedBuild = typeKey;
-      document.querySelectorAll('#buildButtons button').forEach(btn => btn.classList.remove('active'));
-      if (button) button.classList.add('active');
-      showMessage('Build mode: ' + BUILDING_TYPES[typeKey].name + '. Tap valid island terrain.');
+    function buyBuilding(typeKey) {
+      const def = BUILDING_TYPES[typeKey];
+      if (state.money < def.cost) {
+        showMessage('Insufficient credits!');
+        return;
+      }
+      showMessage('Click on your island to place ' + def.name);
+      // Building placement via click will be handled in handleWorldTap
+      window.nextBuildType = typeKey;
     }
 
-    function handleMobileAction(action) {
-      if (!action) return;
-      if (action === 'build') setBuildMode(state.selectedBuild || 'factory');
-      if (action === 'missile') launchPlayerMissile();
-      if (action === 'interceptor') launchManualInterceptor();
-      if (action === 'aircraft') showMessage('Aircraft controls are scaffolded for phase 2.');
-      if (action === 'alliance') showMessage('Guardian Pact: shared defense enabled.');
-      if (action === 'economy') showMessage('Funds grow from command centers, factories, and refineries.');
+    function toggleDefense() {
+      state.defendActive = !state.defendActive;
+      ui.defendToggle.textContent = state.defendActive ? 'Defense Grid: ACTIVE' : 'Activate Defense Grid';
+      ui.defendToggle.style.borderColor = state.defendActive ? 'var(--accent)' : 'rgba(72, 211, 163, 0.35)';
+      log(state.defendActive ? 'Defense grid activated!' : 'Defense grid deactivated.');
+    }
+
+    function toggleShop() {
+      state.shopOpen = !state.shopOpen;
+      ui.shopPanel.style.display = state.shopOpen ? 'block' : 'none';
+    }
+
+    function launchAttackMissile() {
+      const hqs = state.buildings.filter(b => b.type === 'silo');
+      if (hqs.length === 0) {
+        showMessage('No silos available!');
+        return;
+      }
+
+      const enemies = state.buildings.filter(b => b.team.id !== 'player');
+      if (enemies.length === 0) {
+        showMessage('No enemies to target!');
+        return;
+      }
+
+      const launcher = hqs[Math.floor(Math.random() * hqs.length)];
+      const target = enemies[Math.floor(Math.random() * enemies.length)];
+
+      const missile = missilePool.acquire();
+      missile.type = 'attack';
+      missile.team = TEAMS.player;
+      missile.damage = MISSILE_TYPES.attack.damage;
+      missile.blast = MISSILE_TYPES.attack.blast;
+      missile.mesh.position.copy(launcher.mesh.position);
+      missile.mesh.position.y += 25;
+      missile.mesh.visible = true;
+      missile.target = target;
+      
+      const dir = target.mesh.position.clone().sub(missile.mesh.position).normalize();
+      missile.velocity = dir.multiplyScalar(MISSILE_TYPES.attack.speed);
+      missile.life = 0;
+      state.missiles.push(missile);
+      
+      log('Strike missile launched at ' + target.team.name);
+      showMessage('Missile in flight: ' + target.def.name);
     }
 
     function setupInput() {
       addEventListener('resize', onResize);
       addEventListener('keydown', event => {
         input.keys.add(event.code);
-        if (event.code === 'KeyB') setBuildMode('command');
-        if (event.code === 'KeyM') launchPlayerMissile();
-        if (event.code === 'KeyI') launchManualInterceptor();
+        if (event.code === 'KeyW' || event.code === 'ArrowUp') input.forward = 1;
+        if (event.code === 'KeyS' || event.code === 'ArrowDown') input.forward = -1;
+        if (event.code === 'KeyA' || event.code === 'ArrowLeft') input.strafe = -1;
+        if (event.code === 'KeyD' || event.code === 'ArrowRight') input.strafe = 1;
       });
       addEventListener('keyup', event => input.keys.delete(event.code));
+
       canvas.addEventListener('pointerdown', event => {
         input.pointerDown = true;
         input.lastX = event.clientX;
         input.lastY = event.clientY;
         canvas.setPointerCapture?.(event.pointerId);
       });
+
       canvas.addEventListener('pointerup', event => {
         input.pointerDown = false;
-        if (Math.abs(event.clientX - input.lastX) < 8 && Math.abs(event.clientY - input.lastY) < 8) handleWorldTap(event.clientX, event.clientY);
+        if (Math.abs(event.clientX - input.lastX) < 8 && Math.abs(event.clientY - input.lastY) < 8) {
+          handleWorldTap(event.clientX, event.clientY);
+        }
       });
+
       canvas.addEventListener('pointermove', event => {
         updatePointer(event.clientX, event.clientY);
         if (input.pointerDown && event.pointerType !== 'touch') {
@@ -1136,62 +1071,6 @@
           input.lastY = event.clientY;
         }
       });
-      setupTouchZones();
-    }
-
-    function setupTouchZones() {
-      ui.moveStick.addEventListener('touchstart', event => {
-        const t = event.changedTouches[0];
-        input.touchMoveId = t.identifier;
-        updateJoystick(t.clientX, t.clientY);
-      }, { passive: false });
-      ui.moveStick.addEventListener('touchmove', event => {
-        for (const t of event.changedTouches) if (t.identifier === input.touchMoveId) updateJoystick(t.clientX, t.clientY);
-        event.preventDefault();
-      }, { passive: false });
-      ui.moveStick.addEventListener('touchend', event => {
-        for (const t of event.changedTouches) if (t.identifier === input.touchMoveId) resetJoystick();
-      }, { passive: false });
-
-      ui.lookPad.addEventListener('touchstart', event => {
-        const t = event.changedTouches[0];
-        input.touchLookId = t.identifier;
-        input.lastX = t.clientX;
-        input.lastY = t.clientY;
-      }, { passive: false });
-      ui.lookPad.addEventListener('touchmove', event => {
-        for (const t of event.changedTouches) {
-          if (t.identifier === input.touchLookId) {
-            rotateCamera(t.clientX - input.lastX, t.clientY - input.lastY);
-            input.lastX = t.clientX;
-            input.lastY = t.clientY;
-          }
-        }
-        event.preventDefault();
-      }, { passive: false });
-      ui.lookPad.addEventListener('touchend', event => {
-        for (const t of event.changedTouches) if (t.identifier === input.touchLookId) input.touchLookId = null;
-      }, { passive: false });
-    }
-
-    function updateJoystick(x, y) {
-      const rect = ui.moveStick.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = x - cx;
-      const dy = y - cy;
-      const dist = Math.hypot(dx, dy);
-      const max = rect.width / 2 - 15;
-      const clippedDist = Math.min(dist, max);
-      input.joystick.x = clippedDist * dx / (dist || 1) / max;
-      input.joystick.y = clippedDist * dy / (dist || 1) / max;
-      ui.moveKnob.style.transform = `translate(calc(-50% + ${input.joystick.x * 20}px), calc(-50% + ${input.joystick.y * 20}px))`;
-    }
-
-    function resetJoystick() {
-      input.touchMoveId = null;
-      input.joystick.set(0, 0);
-      ui.moveKnob.style.transform = 'translate(-50%, -50%)';
     }
 
     function updatePointer(x, y) {
@@ -1206,112 +1085,21 @@
     }
 
     function handleWorldTap(x, y) {
+      if (!window.nextBuildType) return;
+
       updatePointer(x, y);
       state.raycaster.setFromCamera(state.pointer, state.camera);
       const hits = state.raycaster.intersectObjects(state.scene.children, true);
+
       for (const hit of hits) {
-        if (hit.object.userData.island) {
+        if (hit.object.userData.island && hit.object.userData.island.team === null) {
+          const island = hit.object.userData.island;
           const p = hit.point;
-          const terrain = getTerrainInfo(p.x, p.z);
-          if (!state.selectedBuild) return;
-          if (terrain.buildable && terrain.y > WORLD.waterLevel + 0.5) {
-            placeBuilding(state.selectedBuild, new THREE.Vector3(p.x, 0, p.z), TEAMS.player, terrain.island);
-          }
+          placeBuilding(window.nextBuildType, new THREE.Vector3(p.x, 0, p.z), TEAMS.player, island);
+          window.nextBuildType = null;
           return;
         }
       }
-    }
-
-    function launchPlayerMissile() {
-      const stock = state.stock.common;
-      if (stock.stock <= 0) {
-        showMessage('No Common Tempest missiles available.');
-        return;
-      }
-      stock.stock--;
-      const missile = missilePool.acquire();
-      missile.classKey = 'common';
-      missile.team = TEAMS.player;
-      missile.isInterceptor = false;
-      const launcher = state.buildings.find(b => b.type === 'silo' && b.team.id === 'player');
-      if (!launcher) {
-        showMessage('No missile silo available.');
-        missilePool.release(missile);
-        return;
-      }
-      missile.mesh.position.copy(launcher.mesh.position);
-      missile.mesh.position.y += 20;
-      missile.mesh.visible = true;
-      const targets = state.buildings.filter(b => b.team.allyGroup !== TEAMS.player.allyGroup);
-      missile.target = targets.length > 0 ? targets[Math.floor(Math.random() * targets.length)] : null;
-      missile.velocity.set((Math.random() - 0.5) * 30, 25, (Math.random() - 0.5) * 30);
-      missile.life = 0;
-      state.missiles.push(missile);
-      log('Tempest missile launched from silo.');
-      refreshStockUI();
-    }
-
-    function launchManualInterceptor() {
-      const stock = state.stock.heavy;
-      if (stock.stock <= 0) {
-        showMessage('No interceptors available.');
-        return;
-      }
-      stock.stock--;
-      const interceptor = missilePool.acquire();
-      interceptor.classKey = 'heavy';
-      interceptor.team = TEAMS.player;
-      interceptor.isInterceptor = true;
-      const launcher = state.buildings.find(b => b.type === 'interceptor' && b.team.id === 'player');
-      if (!launcher) {
-        showMessage('No interceptor launcher available.');
-        missilePool.release(interceptor);
-        return;
-      }
-      interceptor.mesh.position.copy(launcher.mesh.position);
-      interceptor.mesh.position.y += 18;
-      interceptor.mesh.visible = true;
-      const threats = state.missiles.filter(m => m.team.id !== 'player' && m.active);
-      interceptor.target = threats.length > 0 ? threats[0] : null;
-      interceptor.velocity.set((Math.random() - 0.5) * 40, 35, (Math.random() - 0.5) * 40);
-      interceptor.life = 0;
-      state.missiles.push(interceptor);
-      log('Interceptor launched.');
-      refreshStockUI();
-    }
-
-    function adminHarpoon() {
-      showMessage('Harpoon mega-weapon charge active. Targeting system ready.');
-    }
-
-    function adminRockets() {
-      showMessage('Rocket barrage inbound. Strategic targets selected.');
-    }
-
-    function adminPullIslands() {
-      state.islands.forEach(island => {
-        island.position.lerp(new THREE.Vector3(0, 0, 0), 0.02);
-      });
-      showMessage('Island convergence in progress. Tactical advantage forming.');
-    }
-
-    function adminDestroyIsland() {
-      const targets = state.islands.filter(island => island !== state.islands[0]);
-      if (targets.length > 0) {
-        const target = targets[Math.floor(Math.random() * targets.length)];
-        target.mesh.visible = false;
-        state.buildings = state.buildings.filter(b => b.island !== target);
-        showMessage('Target island eliminated.');
-      }
-    }
-
-    function tempestEvent() {
-      showMessage('Tempest event triggered. Chaotic storm approaching.');
-    }
-
-    function toggleAdmin() {
-      state.adminOpen = !state.adminOpen;
-      ui.adminPanel.style.display = state.adminOpen ? 'grid' : 'none';
     }
 
     function onResize() {
@@ -1320,33 +1108,98 @@
       state.renderer.setSize(innerWidth, innerHeight);
     }
 
-    function log(message, type = 'info') {
+    function log(message) {
       const line = document.createElement('div');
-      line.style.color = type === 'bad' ? 'var(--danger)' : type === 'good' ? 'var(--accent)' : 'var(--muted)';
+      line.style.color = 'var(--muted)';
       line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
       ui.battleLog.appendChild(line);
       ui.battleLog.scrollTop = ui.battleLog.scrollHeight;
-      if (ui.battleLog.children.length > 20) ui.battleLog.removeChild(ui.battleLog.firstChild);
+      if (ui.battleLog.children.length > 25) ui.battleLog.removeChild(ui.battleLog.firstChild);
     }
 
-    function showMessage(text, duration = 3000) {
+    function showMessage(text) {
       ui.message.textContent = text;
       ui.message.style.display = 'block';
-      setTimeout(() => { ui.message.style.display = 'none'; }, duration);
+      setTimeout(() => { ui.message.style.display = 'none'; }, 3000);
     }
 
-    function refreshStockUI() {
-      ui.stockList.innerHTML = '';
-      Object.entries(state.stock).forEach(([key, item]) => {
-        const row = document.createElement('div');
-        row.className = 'row';
-        row.innerHTML = `<span>${item.name}</span><strong style="color: var(--accent)">${item.stock}/${item.maxStock}</strong>`;
-        ui.stockList.appendChild(row);
-      });
+    function refreshUI() {
+      ui.money.textContent = '$' + Math.round(state.money);
+      ui.income.textContent = '$' + Math.round(state.income) + '/s';
+      ui.baseHealthBar.style.width = (state.baseHealth / state.maxBaseHealth * 100) + '%';
+      ui.baseHealthBar.style.background = state.baseHealth > state.maxBaseHealth * 0.5 ? 'var(--accent)' : state.baseHealth > state.maxBaseHealth * 0.2 ? 'var(--warn)' : 'var(--danger)';
+
+      ui.defense.textContent = state.defendActive ? 'ACTIVE' : '100%';
+      ui.defense.style.color = state.defendActive ? 'var(--accent)' : 'var(--muted)';
+
+      const threat = state.missiles.filter(m => m.team.id !== 'player').length;
+      ui.alertState.textContent = threat > 0 ? 'ALERT' : 'CALM';
+      ui.alertState.style.color = threat > 0 ? 'var(--danger)' : 'var(--accent)';
+
+      const factionInfo = state.bots.map(b => {
+        const hp = b.base.hp;
+        return `<div style="font-size: 11px; margin: 4px 0;">${b.team.name}: <span style="color: ${hp > 500 ? 'var(--accent)' : 'var(--warn)'}">${Math.round(hp)}HP</span></div>`;
+      }).join('');
+      ui.factionStatus.innerHTML = factionInfo;
+
+      const missileInfo = state.missiles.filter(m => m.team.id === 'player').length + ' in flight';
+      ui.missileStatus.innerHTML = `<div style="font-size: 11px; color: var(--warn);">Player Missiles: ${missileInfo}</div>`;
     }
 
-    function createId() {
-      return Math.random().toString(36).substr(2, 9);
+    function handleBotAI(bot, delta) {
+      bot.thinkTimer -= delta;
+      bot.attackCooldown -= delta;
+
+      if (bot.thinkTimer <= 0) {
+        bot.thinkTimer = 3 + Math.random() * 5;
+
+        const income = state.buildings.filter(b => b.team === bot.team && (b.type === 'farm' || b.type === 'plant')).reduce((sum, b) => sum + b.def.income, 0);
+        if (income < 25 && Math.random() < 0.6) {
+          const buildType = Math.random() < 0.5 ? 'farm' : 'plant';
+          const buildPos = bot.island.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150));
+          placeBuilding(buildType, buildPos, bot.team, bot.island);
+        }
+
+        if (bot.attackCooldown <= 0 && Math.random() < 0.4) {
+          const enemies = state.buildings.filter(b => b.team.id !== bot.team.id && b.team.id !== 'player');
+          if (enemies.length === 0) {
+            const playerTargets = state.buildings.filter(b => b.team.id === 'player');
+            if (playerTargets.length > 0 && Math.random() < 0.3) {
+              launchBotMissile(bot, playerTargets[Math.floor(Math.random() * playerTargets.length)]);
+              bot.attackCooldown = 6 + Math.random() * 8;
+            }
+          } else {
+            launchBotMissile(bot, enemies[bot.lastTargetIdx % enemies.length]);
+            bot.lastTargetIdx++;
+            bot.attackCooldown = 6 + Math.random() * 8;
+          }
+        }
+      }
+    }
+
+    function launchBotMissile(bot, target) {
+      const silos = state.buildings.filter(b => b.team === bot.team && b.type === 'silo');
+      if (silos.length === 0) return;
+
+      const launcher = silos[Math.floor(Math.random() * silos.length)];
+      const missileType = Math.random() < 0.3 ? 'heavy' : Math.random() < 0.5 ? 'fast' : 'attack';
+
+      const missile = missilePool.acquire();
+      missile.type = missileType;
+      missile.team = bot.team;
+      missile.damage = MISSILE_TYPES[missileType].damage;
+      missile.blast = MISSILE_TYPES[missileType].blast;
+      missile.mesh.position.copy(launcher.mesh.position);
+      missile.mesh.position.y += 25;
+      missile.mesh.visible = true;
+      missile.target = target;
+      
+      const dir = target.mesh.position.clone().sub(missile.mesh.position).normalize();
+      missile.velocity = dir.multiplyScalar(MISSILE_TYPES[missileType].speed);
+      missile.life = 0;
+      state.missiles.push(missile);
+      
+      log(bot.team.name + ' launched attack on ' + target.team.name);
     }
 
     function animate() {
@@ -1356,12 +1209,10 @@
       // Update player movement
       input.forward = 0;
       input.strafe = 0;
-      if (input.keys.has('KeyW')) input.forward += 1;
-      if (input.keys.has('KeyS')) input.forward -= 1;
-      if (input.keys.has('KeyA')) input.strafe -= 1;
-      if (input.keys.has('KeyD')) input.strafe += 1;
-      input.forward += input.joystick.y;
-      input.strafe += input.joystick.x;
+      if (input.keys.has('KeyW')) input.forward = 1;
+      if (input.keys.has('KeyS')) input.forward = -1;
+      if (input.keys.has('KeyA')) input.strafe = -1;
+      if (input.keys.has('KeyD')) input.strafe = 1;
 
       const moveDir = new THREE.Vector3(input.strafe, 0, input.forward).normalize();
       const moveSpeed = 42;
@@ -1391,11 +1242,6 @@
       }
 
       // Update camera
-      state.cameraYaw += input.lookDelta.x * 0.002;
-      state.cameraPitch += input.lookDelta.y * 0.002;
-      state.cameraPitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.8, state.cameraPitch));
-      input.lookDelta.set(0, 0);
-
       const camDistance = 35;
       const camHeight = 8;
       const camX = player.mesh.position.x + Math.sin(state.cameraYaw) * camDistance * Math.cos(state.cameraPitch);
@@ -1404,35 +1250,55 @@
       state.camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.08);
       state.camera.lookAt(player.mesh.position.x, player.mesh.position.y + 2, player.mesh.position.z);
 
-      // Update UI
-      ui.money.textContent = '$' + Math.round(state.money);
-      ui.income.textContent = '$' + Math.round(state.income) + '/s';
+      // Update money and income
       state.money += state.income * delta;
-      state.nextRestock -= delta;
-      if (state.nextRestock <= 0) {
-        state.nextRestock = WORLD.restockInterval;
-        Object.values(state.stock).forEach(item => {
-          if (Math.random() < item.restockChance) {
-            item.stock = Math.min(item.maxStock, item.stock + 1 + Math.floor(Math.random() * 2));
-          }
-        });
-        refreshStockUI();
-      }
 
       // Update missiles
       state.missiles = state.missiles.filter(m => m.active);
       state.missiles.forEach(m => {
-        if (!m.active) return;
         m.life += delta;
         m.velocity.y -= WORLD.gravity * 0.6 * delta;
         m.mesh.position.add(m.velocity.clone().multiplyScalar(delta));
         m.mesh.rotation.y += 0.08;
 
-        if (m.target && m.isInterceptor) {
-          const dir = m.target.mesh.position.clone().sub(m.mesh.position).normalize();
-          m.velocity.add(dir.multiplyScalar(80 * delta));
-          const maxSpeed = 150;
-          if (m.velocity.length() > maxSpeed) m.velocity.normalize().multiplyScalar(maxSpeed);
+        if (m.target && m.target.mesh) {
+          const distToTarget = m.mesh.position.distanceTo(m.target.mesh.position);
+          if (distToTarget < m.blast + 5) {
+            // Missile hits target
+            m.target.hp -= m.damage;
+            if (m.target.hp <= 0) {
+              m.target.mesh.visible = false;
+              state.buildings = state.buildings.filter(b => b !== m.target);
+              log('Building destroyed: ' + m.target.def.name + ' (' + m.target.team.name + ')');
+              
+              if (m.target.type === 'hq') {
+                const botIndex = state.bots.findIndex(b => b.base === m.target);
+                if (botIndex >= 0) state.bots.splice(botIndex, 1);
+                if (m.team.id === 'player') log('VICTORY: ' + m.target.team.name + ' has been eliminated!');
+              }
+            }
+
+            // Create explosion
+            const exp = explosionPool.acquire();
+            exp.mesh.position.copy(m.mesh.position);
+            exp.mesh.scale.set(m.blast / 50, m.blast / 50, m.blast / 50);
+            exp.mesh.visible = true;
+            exp.life = 0;
+            exp.maxLife = 0.8;
+            exp.radius = m.blast;
+            state.explosions.push(exp);
+
+            // Check if hit player base
+            if (m.target === player.base) {
+              state.baseHealth = Math.max(0, state.baseHealth - m.damage);
+              showMessage('Base under attack! Health: ' + Math.round(state.baseHealth));
+            }
+
+            m.mesh.visible = false;
+            m.active = false;
+            missilePool.release(m);
+            return;
+          }
         }
 
         if (m.life > 120 || m.mesh.position.y < WORLD.waterLevel - 10) {
@@ -1442,7 +1308,51 @@
         }
       });
 
-      // Update FPS
+      // Defense systems auto-fire
+      if (state.defendActive) {
+        const defenses = state.buildings.filter(b => b.type === 'defense' && b.team.id === 'player');
+        defenses.forEach(def => {
+          const threats = state.missiles.filter(m => m.team.id !== 'player' && m.mesh.position.distanceTo(def.mesh.position) < 150);
+          threats.forEach(threat => {
+            if (Math.random() < 0.3) {
+              const interceptor = missilePool.acquire();
+              interceptor.type = 'defense';
+              interceptor.team = TEAMS.player;
+              interceptor.damage = 200;
+              interceptor.blast = 40;
+              interceptor.isDefense = true;
+              interceptor.mesh.position.copy(def.mesh.position);
+              interceptor.mesh.position.y += 10;
+              interceptor.mesh.visible = true;
+              interceptor.target = threat;
+              
+              const dir = threat.mesh.position.clone().sub(interceptor.mesh.position).normalize();
+              interceptor.velocity = dir.multiplyScalar(150);
+              interceptor.life = 0;
+              state.missiles.push(interceptor);
+            }
+          });
+        });
+      }
+
+      // Update explosions
+      state.explosions = state.explosions.filter(e => e.active);
+      state.explosions.forEach(e => {
+        e.life += delta;
+        e.mesh.scale.multiplyScalar(1.02);
+        const opacity = Math.max(0, 1 - (e.life / e.maxLife));
+        e.mesh.material.opacity = opacity * 0.75;
+        if (e.life > e.maxLife) {
+          e.mesh.visible = false;
+          e.active = false;
+          explosionPool.release(e);
+        }
+      });
+
+      // Bot AI
+      state.bots.forEach(bot => handleBotAI(bot, delta));
+
+      // Update UI
       state.fpsFrames++;
       state.fpsTimer += delta;
       if (state.fpsTimer >= 1) {
@@ -1451,8 +1361,14 @@
         state.fpsTimer = 0;
       }
 
+      refreshUI();
       state.renderer.render(state.scene, state.camera);
     }
+
+    // Make functions global for inline handlers
+    window.buyBuilding = buyBuilding;
+    window.toggleDefense = toggleDefense;
+    window.launchAttackMissile = launchAttackMissile;
 
     init();
   </script>
